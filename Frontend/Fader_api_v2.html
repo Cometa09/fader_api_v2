@@ -1,0 +1,605 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Virtual Mixer</title>
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background-color: #1a1a1a;
+            color: #fff;
+        }
+
+        .mixer-container {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            padding: 12px;
+        }
+
+        .main-content {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+        }
+
+        .pgm-meters {
+            display: flex;
+            justify-content: space-around;
+            background-color: #2a2a2a;
+            padding: 12px;
+            border-radius: 6px;
+        }
+
+        .pgm-meter {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .pgm-meter span {
+            font-size: 16.8px;
+            margin-bottom: 6px;
+        }
+
+        .meter-bar {
+            width: 120px;
+            height: 12px;
+            background-color: #333;
+            border-radius: 6px;
+            overflow: hidden;
+        }
+
+        .meter-fill {
+            width: 50%;
+            height: 100%;
+            background-color: #00ff00;
+        }
+
+        .channels {
+            flex: 1;
+            display: flex;
+            overflow-x: auto;
+            background-color: #2a2a2a;
+            padding: 12px;
+            border-radius: 6px;
+            margin-right: 12px;
+        }
+
+        .channel {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 120px;
+            margin-right: 12px;
+            background-color: #333;
+            padding: 12px;
+            border-radius: 6px;
+        }
+
+        .channel.wide {
+            width: 240px;
+            flex-direction: row;
+            align-items: flex-start;
+        }
+
+        .channel.wide .channel-main {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 120px;
+        }
+
+        .channel select {
+            width: 100%;
+            background-color: #444;
+            color: #fff;
+            border: none;
+            padding: 6px;
+            margin-bottom: 12px;
+            font-size: 16.8px;
+        }
+
+        .pgm-buttons {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 6px;
+            margin-bottom: 12px;
+        }
+
+        .pgm-buttons button {
+            background-color: #555;
+            border: none;
+            width: 52px;
+            height: 52px;
+            color: #fff;
+            cursor: pointer;
+            font-size: 16.8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .pgm-buttons button.active {
+            background-color: #007bff;
+        }
+
+        .fader-meter {
+            display: flex;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .fader {
+            width: 36px;
+            height: 500px;
+            background-color: #444;
+            position: relative;
+            border-radius: 6px;
+            user-select: none;
+            touch-action: none;
+        }
+
+        .fader .fader-handle {
+            width: 100%;
+            height: 24px;
+            background-color: #800080;
+            position: absolute;
+            bottom: 0;
+            border-radius: 6px;
+            cursor: ns-resize;
+            user-select: none;
+        }
+
+        .fader .channel-number {
+            position: absolute;
+            bottom: -24px;
+            width: 100%;
+            text-align: center;
+            font-size: 14.4px;
+        }
+
+        .meter {
+            width: 25px;
+            height: 500px;
+            background-color: #444;
+            margin-left: 12px;
+            position: relative;
+            border-radius: 6px;
+        }
+
+        .meter .meter-fill {
+            width: 100%;
+            height: 0;
+            background-color: #00ff00;
+            position: absolute;
+            bottom: 0;
+            transition: height 0.1s ease;
+        }
+
+        .meter .meter-marks {
+            position: absolute;
+            height: 100%;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            font-size: 9.6px;
+            color: #888;
+        }
+
+        .control-buttons {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+            margin-bottom: 12px;
+            margin-top: 24px;
+        }
+
+        .control-buttons .opt-btn {
+            width: 52px;
+            height: 52px;
+        }
+
+        .control-buttons .tb-pfl {
+            display: flex;
+            gap: 6px;
+            width: 100%;
+            justify-content: center;
+        }
+
+        .control-buttons button {
+            background-color: #555;
+            border: none;
+            width: 52px;
+            height: 52px;
+            color: #fff;
+            cursor: pointer;
+            font-size: 16.8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .control-buttons button.active {
+            background-color: #007bff;
+        }
+
+        .on-off-btn {
+            width: 100%;
+            padding: 12px;
+            border: none;
+            color: #fff;
+            cursor: pointer;
+            font-size: 16.8px;
+        }
+
+        .on-off-btn.off {
+            background-color: #555;
+        }
+
+        .on-off-btn.on {
+            background-color: #ff0000;
+        }
+
+        .phone-controls {
+            display: flex;
+            margin-top: 200px;
+            flex-direction: column;
+            gap: 6px;
+            width: 120px;
+            margin-left: 12px;
+        }
+
+        .phone-controls button {
+            padding: 12px;
+            border: none;
+            color: #fff;
+            cursor: pointer;
+            font-size: 16.8px;
+        }
+
+        .phone-controls .busy-all {
+            background-color: #555;
+        }
+
+        .phone-controls .busy-all.active {
+            background-color: #ff0000;
+        }
+
+        .phone-controls .line-btn {
+            background-color: #555;
+        }
+
+        .phone-controls .line-btn.active {
+            background-color: #00ff00;
+        }
+
+        .phone-controls .hold-btn,
+        .phone-controls .next-btn {
+            background-color: #555;
+        }
+
+        .phone-controls .hold-btn.active,
+        .phone-controls .next-btn.active {
+            background-color: #007bff;
+        }
+
+        .phone-controls .drop-btn {
+            background-color: #555;
+        }
+
+        .phone-controls .drop-btn.active {
+            background-color: #ff0000;
+        }
+
+
+        .talk-btn {
+            background-color: #555;
+            border: none;
+            padding: 6px 12px;
+            color: #fff;
+            cursor: pointer;
+            font-size: 16.8px;
+        }
+
+        .monitor-buttons {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 6px;
+            margin-bottom: 12px;
+        }
+
+        .monitor-btn {
+            background-color: #555;
+            border: none;
+            padding: 6px;
+            color: #fff;
+            cursor: pointer;
+            font-size: 16.8px;
+        }
+
+        .pfl-btn {
+            background-color: #555;
+            border: none;
+            padding: 6px 12px;
+            color: #fff;
+            cursor: pointer;
+            font-size: 16.8px;
+        }
+
+        .channel .channel-main,
+        .channel:not(.wide) {
+            height: 860px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .channel.wide {
+            align-items: stretch;
+        }
+
+        .channel.wide .channel-main,
+        .channel.wide .phone-controls {
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+        .meter-mark {
+            position: absolute;
+            left: 35px;
+            width: 100%;
+            text-align: left;
+            font-size: 10px;
+        }
+ 
+        .control-buttons {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 4px;
+        }
+
+        .fader-meter {
+            display: flex;
+            flex-direction: row;
+            align-items: flex-end;
+            gap: 10px;
+            height: 500px;
+            position: relative;
+        }
+
+    </style>
+</head>
+
+<body>
+    <div class="mixer-container">
+      <div class="channels" id="channels"></div>
+    </div>
+  
+    <script>
+      let channelData = [];
+      let faderUpdateTimeouts = {};
+  
+      async function fetchChannels() {
+        try {
+          const res = await fetch("https://api.cometa-project.ru/channels");
+          if (!res.ok) throw new Error("Failed to load channels");
+          const data = await res.json();
+          channelData = data.sort((a, b) => a.order - b.order);
+          renderChannels();
+        } catch (error) {
+          console.error("Error loading channels:", error);
+        }
+      }
+  
+      function renderChannels() {
+        const channelsDiv = document.getElementById("channels");
+        channelsDiv.innerHTML = "";
+  
+        channelData.forEach((channel, index) => {
+          const channelDiv = document.createElement("div");
+          channelDiv.className = "channel";
+  
+          //  DROPDOWN SELECT
+          const labelSelect = document.createElement("select");
+          channelData.forEach((ch, idx) => {
+            const option = document.createElement("option");
+            option.value = idx;
+            option.textContent = ch.label || `Channel ${idx + 1}`;
+            if (idx === index) option.selected = true;
+            labelSelect.appendChild(option);
+          });
+  
+          labelSelect.addEventListener("change", async (e) => {
+            const selectedIndex = parseInt(e.target.value);
+            const from = index;
+            const to = selectedIndex;
+
+            // Меняем местами каналы
+            const temp = channelData[from];
+            channelData[from] = channelData[to];
+            channelData[to] = temp;
+
+            // Обновляем порядок (order)
+            await Promise.all(channelData.map((ch, i) =>
+                fetch(`https://api.cometa-project.ru/channels/${ch.id}`, {
+                method: "PATCH",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ order: i + 1 })
+                })
+            ));
+
+            fetchChannels(); // Перерисовываем UI
+            });
+  
+          channelDiv.appendChild(labelSelect);
+  
+          // PGM BUTTONS 
+          const pgmButtons = document.createElement("div");
+          pgmButtons.className = "pgm-buttons";
+          for (let i = 1; i <= 4; i++) {
+            const btn = document.createElement("button");
+            btn.textContent = `PGM ${i}`;
+            if (channel.ui_state?.[`PGM ${i}`]) btn.classList.add("active");
+            btn.addEventListener("click", () => {
+              btn.classList.toggle("active");
+              updateChannelState(index, `PGM ${i}`, btn.classList.contains("active"));
+            });
+            pgmButtons.appendChild(btn);
+          }
+          channelDiv.appendChild(pgmButtons);
+  
+          //  FADER AND METER 
+          const faderMeter = document.createElement("div");
+          faderMeter.className = "fader-meter";
+  
+          const fader = document.createElement("div");
+          fader.className = "fader";
+  
+          const faderHandle = document.createElement("div");
+          faderHandle.className = "fader-handle";
+          fader.appendChild(faderHandle);
+          faderMeter.appendChild(fader);
+  
+          const meter = document.createElement("div");
+          meter.className = "meter";
+  
+          const meterFill = document.createElement("div");
+          meterFill.className = "meter-fill";
+          meterFill.style.height = `${(channel.ui_state?.fader_level || 0) * 100}%`;
+          meter.appendChild(meterFill);
+  
+          const levels = [-60, -50, -40, -30, -20, -10, 0, 10];
+          levels.forEach(level => {
+            const mark = document.createElement("div");
+            mark.className = "meter-mark";
+            mark.textContent = level;
+            mark.style.bottom = `${(level + 60) / 70 * 100}%`;
+            meter.appendChild(mark);
+          });
+  
+          faderMeter.appendChild(meter);
+          channelDiv.appendChild(faderMeter);
+  
+          enableFaderDrag(fader, faderHandle, meterFill, index, channel.ui_state?.fader_level || 0);
+  
+          //  CONTROL BUTTONS 
+          const controlButtons = document.createElement("div");
+          controlButtons.className = "control-buttons";
+  
+          ["OPT", "TB", "PFL"].forEach(label => {
+            const btn = document.createElement("button");
+            btn.textContent = label;
+            if (channel.ui_state?.[label.toLowerCase()]) btn.classList.add("active");
+            btn.addEventListener("click", () => {
+              btn.classList.toggle("active");
+              updateChannelState(index, label, btn.classList.contains("active"));
+            });
+            controlButtons.appendChild(btn);
+          });
+  
+          channelDiv.appendChild(controlButtons);
+  
+          //  ON/OFF BUTTON 
+          const onOffBtn = document.createElement("button");
+          onOffBtn.className = "on-off-btn";
+          const isOn = channel.ui_state?.on;
+          onOffBtn.classList.add(isOn ? "on" : "off");
+          onOffBtn.textContent = isOn ? "ON" : "OFF";
+  
+          onOffBtn.addEventListener("click", () => {
+            const nowOn = onOffBtn.classList.contains("on");
+            onOffBtn.classList.toggle("on");
+            onOffBtn.classList.toggle("off");
+            onOffBtn.textContent = nowOn ? "OFF" : "ON";
+            updateChannelState(index, "ON", !nowOn);
+          });
+  
+          channelDiv.appendChild(onOffBtn);
+          channelsDiv.appendChild(channelDiv);
+        });
+      }
+  
+      function enableFaderDrag(fader, faderHandle, meterFill, index, initialLevel) {
+        const faderHeight = 500;
+        const handleHeight = 24;
+        const maxY = faderHeight - handleHeight;
+        let isDragging = false;
+  
+        const setPosition = (level) => {
+          const pos = level * maxY;
+          faderHandle.style.bottom = `${pos}px`;
+          meterFill.style.height = `${(level * 100).toFixed(1)}%`;
+        };
+  
+        setPosition(initialLevel);
+  
+        const updateLevel = (level) => {
+          setPosition(level);
+          clearTimeout(faderUpdateTimeouts[index]);
+          faderUpdateTimeouts[index] = setTimeout(() => {
+            updateChannelState(index, "Fader Level", level.toFixed(2));
+          }, 200);
+        };
+  
+        faderHandle.addEventListener("pointerdown", (e) => {
+          isDragging = true;
+          e.preventDefault();
+        });
+  
+        document.addEventListener("pointermove", (e) => {
+          if (!isDragging) return;
+          const rect = fader.getBoundingClientRect();
+          let newY = rect.bottom - e.clientY;
+          newY = Math.max(0, Math.min(newY, maxY));
+          const level = newY / maxY;
+          updateLevel(level);
+        });
+  
+        document.addEventListener("pointerup", () => isDragging = false);
+  
+        fader.addEventListener("click", (e) => {
+          const rect = fader.getBoundingClientRect();
+          let newY = rect.bottom - e.clientY;
+          newY = Math.max(0, Math.min(newY, maxY));
+          const level = newY / maxY;
+          updateLevel(level);
+        });
+      }
+  
+      async function updateChannelState(index, control, state) {
+        const channel = channelData[index];
+        if (!channel || !channel.id) return;
+  
+        const uiState = { ...channel.ui_state };
+  
+        if (control.startsWith("PGM")) uiState[control] = state;
+        else if (control === "Fader Level") uiState["fader_level"] = parseFloat(state);
+        else if (control === "ON") uiState["on"] = state;
+        else uiState[control.toLowerCase()] = state;
+  
+        try {
+          const res = await fetch(`https://api.cometa-project.ru/channels/${channel.id}`, {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ ui_state: uiState })
+          });
+  
+          if (res.ok) channelData[index].ui_state = uiState;
+          else console.error("Update failed:", await res.text());
+        } catch (err) {
+          console.error("Network error:", err);
+        }
+      }
+  
+      fetchChannels();
+    </script>
+  </body>
+  
+</html>
